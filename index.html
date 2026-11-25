@@ -373,7 +373,7 @@
 <div class="wrap">
   <section class="hero">
     <h1 id="site-title">资源导航台</h1>
-    <p class="sub" id="site-sub">GNSS · InSAR · 数据下载 · 常用系统</p>
+    <p class="sub" id="site-sub">AI · GNSS · InSAR · 数据下载 · 常用系统</p>
 
     <div class="search">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
@@ -402,8 +402,8 @@
    ========================================================= */
 const SITE = {
   title: "资源导航台",
-  subtitle: "GNSS · InSAR · 数据下载 · 常用系统",
-  /*footer: '内容按 <code>links.md</code> 整理 · 增删条目改本文件里的 <code>SECTIONS</code> 即可 · 按 <code>/</code> 搜索 · 带 <code>FTP</code> 标记的地址点击会复制，用 FileZilla 等客户端打开'*/
+  subtitle: "AI · GNSS · InSAR · 数据下载 · 常用系统",
+  footer: '内容按 <code>links.md</code> 整理 · 增删条目改本文件里的 <code>SECTIONS</code> 即可 · 按 <code>/</code> 搜索 · 带 <code>FTP</code> 标记的地址点击会复制，用 FileZilla 等客户端打开'
 };
 
 /* =========================================================
@@ -413,6 +413,20 @@ const SITE = {
    表格列定义: cols:[{ k:"name"|"url"|"note", label:"列名", type:"url" }]
    ========================================================= */
 const SECTIONS = [
+  {
+    id: "ai",
+    title: "AI",
+    type: "cards",
+    items: [
+      { name: "ChatGPT",   desc: "chatgpt.com",        url: "https://chatgpt.com/" },
+      { name: "Claude",    desc: "claude.com",         url: "https://claude.com/product/claude-code" },
+      { name: "Gemini",    desc: "gemini.google.com",  url: "https://gemini.google.com/app?pli=1" },
+      { name: "Google AI Studio", desc: "aistudio.google.com", url: "https://aistudio.google.com/prompts/new_chat" },
+      { name: "Copilot",   desc: "copilot.com",        url: "https://copilot.com/chat" },
+      { name: "GitHub",    desc: "github.com",         url: "https://github.com/" },
+      { name: "DeepSeek",  desc: "deepseek.com",       url: "https://www.deepseek.com/en/" }
+    ]
+  },
   {
     id: "gnss",
     title: "GNSS",
@@ -517,6 +531,16 @@ const SECTIONS = [
     ]
   },
   {
+    id: "airport",
+    title: "机场",
+    type: "cards",
+    items: [
+      { name: "树洞",     desc: "balala.io · 登录",   url: "https://balala.io/auth/login" },
+      { name: "ikuuu",    desc: "ikuuu.top · 登录",   url: "https://ikuuu.top/auth/login" },
+      { name: "linkcube", desc: "linkcube.org · 客户中心", url: "https://linkcube.org/clientarea.php" }
+    ]
+  },
+  {
     id: "fun",
     title: "有趣的东西",
     type: "cards",
@@ -530,7 +554,7 @@ const SECTIONS = [
 ];
 
 /* 分区显示的先后：表格类（数据）放最后 */
-const ORDER = ["gnss", "insar", "systems", "fun", "data"];
+const ORDER = ["ai", "gnss", "insar", "systems", "airport", "fun", "data"];
 SECTIONS.sort((a, b) => ORDER.indexOf(a.id) - ORDER.indexOf(b.id));
 
 /* =========================================================
