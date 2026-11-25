@@ -1,0 +1,811 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="light dark" />
+<title>资源导航台</title>
+<!--
+  单文件聚合导航页：不依赖任何外部框架 / CDN，双击即可用，也能直接扔到任何静态托管。
+  内容按 links.md 整理：
+    · 有链接标题的条目  -> 卡片
+    · links.md 里的表格 -> 网页里也是表格
+  FTP 地址点击后自动复制（浏览器已不支持直接打开 ftp://）。
+-->
+<script>
+  /* 提前定主题，避免深色模式下打开时闪白 */
+  (function () {
+    try {
+      var t = localStorage.getItem("hub-theme");
+      if (!t) t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      document.documentElement.dataset.theme = t;
+    } catch (e) {}
+  })();
+</script>
+<style>
+  /* ============================================================
+     参考 apple.com 的排版系统：
+     固定毛玻璃导航 / 大字标题 / 无边框圆角卡片 / 细分割线
+     ============================================================ */
+  :root{
+    --bg:#fbfbfd;
+    --soft:#f5f5f7;
+    --panel:#ffffff;
+    --text:#1d1d1f;
+    --muted:#6e6e73;
+    --line:rgba(0,0,0,.10);
+    --line-soft:rgba(0,0,0,.06);
+    --accent:#0071e3;
+    --shadow:0 1px 2px rgba(0,0,0,.04), 0 6px 18px rgba(0,0,0,.035);
+    --shadow-hover:0 18px 40px rgba(0,0,0,.10);
+    --radius:20px;
+    --nav-h:48px;
+  }
+  html[data-theme="dark"]{
+    --bg:#000000;
+    --soft:#2c2c2e;
+    --panel:#1c1c1e;
+    --text:#f5f5f7;
+    --muted:#86868b;
+    --line:rgba(255,255,255,.14);
+    --line-soft:rgba(255,255,255,.08);
+    --accent:#2997ff;
+    --shadow:0 1px 2px rgba(0,0,0,.6);
+    --shadow-hover:0 18px 40px rgba(0,0,0,.75);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  html,body{min-height:100%}
+  body{
+    margin:0;
+    padding:calc(var(--nav-h) + 0px) 22px 0;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",
+                "PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;
+    color:var(--text);
+    background:var(--bg);
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    transition:background-color .35s ease, color .35s ease;
+  }
+  .wrap{max-width:1040px;margin:0 auto}
+
+  /* ---------- 顶部固定导航（apple.com 风格） ---------- */
+  .topbar{
+    position:fixed;top:0;left:0;right:0;z-index:30;
+    height:var(--nav-h);
+    background:color-mix(in srgb, var(--bg) 72%, transparent);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);
+    backdrop-filter:saturate(180%) blur(20px);
+    border-bottom:1px solid var(--line-soft);
+    transition:background-color .3s ease, border-color .3s ease;
+  }
+  .topbar-inner{
+    max-width:1040px;margin:0 auto;height:100%;
+    padding:0 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:28px;
+  }
+  .brand{
+    font-size:14px;font-weight:600;letter-spacing:-.01em;
+    color:var(--text);text-decoration:none;white-space:nowrap;
+  }
+  #nav{
+    display:flex;align-items:center;justify-content:center;gap:26px;
+    flex:1;
+  }
+  #nav a{
+    font-size:12.5px;color:var(--muted);text-decoration:none;
+    letter-spacing:-.005em;white-space:nowrap;
+    transition:color .18s ease;
+  }
+  #nav a:hover{color:var(--text)}
+  #theme{
+    flex:0 0 auto;
+    width:30px;height:30px;border-radius:50%;
+    display:grid;place-items:center;cursor:pointer;
+    border:0;background:transparent;color:var(--muted);
+    transition:color .18s ease, background-color .18s ease;
+  }
+  #theme:hover{color:var(--text);background:var(--soft)}
+  #theme svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round}
+
+  /* ---------- 首屏 ---------- */
+  .hero{padding:78px 0 30px;text-align:center}
+  .hero h1{
+    margin:0;
+    font-size:clamp(36px,5.6vw,56px);
+    line-height:1.05;
+    letter-spacing:-.03em;
+    font-weight:600;
+    color:var(--text);
+  }
+  .hero .sub{
+    margin:16px auto 0;
+    max-width:620px;
+    font-size:clamp(16px,2vw,19px);
+    line-height:1.5;
+    color:var(--muted);
+    letter-spacing:-.005em;
+  }
+
+  /* ---------- 搜索 ---------- */
+  .search{position:relative;max-width:540px;margin:36px auto 0}
+  .search svg{
+    position:absolute;left:16px;top:50%;transform:translateY(-50%);
+    width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;
+    stroke-linecap:round;pointer-events:none;
+  }
+  #q{
+    width:100%;height:48px;
+    padding:0 46px 0 42px;
+    font-size:15px;color:var(--text);font-family:inherit;
+    border-radius:14px;
+    border:1px solid transparent;
+    background:var(--soft);
+    outline:none;
+    transition:background-color .2s ease, box-shadow .2s ease, border-color .2s ease;
+  }
+  #q::placeholder{color:var(--muted)}
+  #q:focus{
+    background:var(--panel);
+    border-color:color-mix(in srgb,var(--accent) 55%,transparent);
+    box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 20%,transparent);
+  }
+  #q::-webkit-search-cancel-button{-webkit-appearance:none}
+  .kbd{
+    position:absolute;right:14px;top:50%;transform:translateY(-50%);
+    font-size:11px;color:var(--muted);
+    padding:2px 6px;border-radius:5px;background:var(--panel);
+    border:1px solid var(--line-soft);
+    pointer-events:none;
+  }
+  #q:not(:placeholder-shown) ~ .kbd{display:none}
+
+  /* ---------- 分区 ---------- */
+  .hero-nav{display:none}
+  main{margin-top:44px}
+  .section{margin-bottom:80px;scroll-margin-top:calc(var(--nav-h) + 28px)}
+  .section-head{display:flex;align-items:baseline;gap:12px;margin:0 0 22px}
+  .section-head h2{
+    margin:0;
+    font-size:clamp(22px,2.6vw,30px);
+    font-weight:600;
+    letter-spacing:-.022em;
+    color:var(--text);
+    white-space:nowrap;
+  }
+  .section-head .num{font-size:15px;color:var(--muted);letter-spacing:-.01em}
+  .section-head .line{display:none}
+  .block + .block{margin-top:32px}
+  .sub-head{display:flex;align-items:baseline;gap:10px;margin:0 0 12px}
+  .sub-head h3{margin:0;font-size:17px;font-weight:600;letter-spacing:-.01em}
+  .sub-head em{font-style:normal;font-size:13px;color:var(--muted)}
+
+  /* ---------- 卡片 ---------- */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+    gap:16px;
+  }
+  .card{
+    position:relative;min-width:0;
+    display:flex;align-items:center;gap:14px;
+    padding:18px 20px;
+    border-radius:var(--radius);
+    border:0;
+    background:var(--panel);
+    text-decoration:none;color:inherit;
+    box-shadow:var(--shadow);
+    transition:transform .3s cubic-bezier(.25,.1,.25,1), box-shadow .3s ease;
+  }
+  .card:hover{transform:translateY(-3px);box-shadow:var(--shadow-hover)}
+  .card:active{transform:translateY(0) scale(.995)}
+  .card:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  .icon{
+    position:relative;flex:0 0 auto;
+    width:46px;height:46px;border-radius:13px;
+    display:grid;place-items:center;
+    background:hsl(var(--h) 42% 96%);
+    color:hsl(var(--h) 42% 38%);
+    font-size:18px;font-weight:600;line-height:1;
+  }
+  html[data-theme="dark"] .icon{
+    background:hsl(var(--h) 26% 15%);
+    color:hsl(var(--h) 62% 74%);
+  }
+  .icon img{position:absolute;width:26px;height:26px;object-fit:contain;border-radius:6px}
+  .meta{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+  .meta strong{
+    font-size:15.5px;font-weight:560;letter-spacing:-.01em;line-height:1.3;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .meta small{
+    font-size:12.5px;color:var(--muted);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .arrow{
+    flex:0 0 auto;font-size:15px;color:var(--muted);
+    opacity:0;transform:translateX(-3px);
+    transition:opacity .25s ease, transform .25s ease, color .25s ease;
+  }
+  .card:hover .arrow{opacity:.9;transform:translateX(0);color:var(--accent)}
+
+  /* ---------- 表格 ---------- */
+  .table-wrap{
+    border:0;
+    border-radius:var(--radius);
+    background:var(--panel);
+    box-shadow:var(--shadow);
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  table{width:100%;border-collapse:collapse;font-size:14px;min-width:480px}
+  thead th{
+    text-align:left;font-weight:500;
+    font-size:12.5px;color:var(--muted);letter-spacing:-.005em;
+    padding:16px 22px;
+    background:transparent;
+    border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  tbody td{
+    padding:15px 22px;
+    border-bottom:1px solid var(--line-soft);
+    vertical-align:middle;
+  }
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr{transition:background-color .15s ease}
+  tbody tr:hover{background:color-mix(in srgb, var(--soft) 70%, transparent)}
+  td.name{color:var(--text);font-size:14px;letter-spacing:-.005em}
+  td.note{color:var(--muted);font-size:13px;white-space:nowrap}
+  .cell-note{font-style:normal;color:var(--muted);font-size:12.5px;white-space:nowrap}
+  .url{
+    display:inline-flex;align-items:baseline;flex-wrap:wrap;gap:7px;
+    min-width:0;text-decoration:none;color:var(--text);
+    font-size:13.5px;word-break:break-all;
+  }
+  .url:hover{color:var(--accent)}
+  .url:hover .host{color:var(--accent)}
+  .url .proto{
+    flex:0 0 auto;min-width:44px;text-align:center;
+    font-size:9.5px;letter-spacing:.06em;color:var(--muted);
+    padding:2px 5px;border-radius:5px;
+    background:var(--soft);
+    transform:translateY(-1px);
+  }
+  .url .proto.ftp{color:#9a6a00;background:rgba(255,159,10,.12)}
+  html[data-theme="dark"] .url .proto.ftp{color:#ffb340;background:rgba(255,159,10,.16)}
+  .url .host{font-weight:500}
+  .url .path{color:var(--muted);font-size:12.5px}
+
+  .empty{display:none;text-align:center;color:var(--muted);padding:90px 0;font-size:15px}
+  .empty.on{display:block}
+  .empty b{display:block;font-size:19px;color:var(--text);margin-bottom:8px;font-weight:600;letter-spacing:-.01em}
+
+  /* ---------- 底部 ---------- */
+  footer{
+    margin-top:24px;padding:28px 0 72px;
+    border-top:1px solid var(--line-soft);
+    text-align:center;color:var(--muted);font-size:12px;line-height:1.9;
+  }
+  footer code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;
+    padding:2px 5px;border-radius:5px;background:var(--soft);
+  }
+
+  /* ---------- 提示条 ---------- */
+  #toast{
+    position:fixed;left:50%;bottom:34px;z-index:40;
+    transform:translate(-50%,14px);
+    padding:12px 20px;border-radius:14px;
+    background:rgba(0,0,0,.82);color:#fff;
+    -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);
+    font-size:13px;white-space:nowrap;max-width:90vw;
+    overflow:hidden;text-overflow:ellipsis;
+    opacity:0;pointer-events:none;
+    transition:opacity .24s ease, transform .24s ease;
+    box-shadow:0 14px 34px rgba(0,0,0,.28);
+  }
+  html[data-theme="dark"] #toast{background:rgba(245,245,247,.94);color:#000}
+  #toast.on{opacity:1;transform:translate(-50%,0)}
+
+  @media (max-width:760px){
+    #nav{display:none}
+    .hero-nav{
+      display:flex;flex-wrap:wrap;justify-content:center;
+      gap:10px 22px;margin-top:26px;
+    }
+    .hero-nav a{
+      font-size:13.5px;color:var(--muted);text-decoration:none;
+      letter-spacing:-.005em;transition:color .18s ease;
+    }
+    .hero-nav a:hover{color:var(--accent)}
+  }
+  @media (max-width:640px){
+    body{padding-left:16px;padding-right:16px}
+    .topbar-inner{padding:0 16px;gap:12px}
+    .hero{padding:56px 0 24px}
+    .hero h1{margin:0}
+    .hero .sub{margin-top:12px}
+    .search{margin-top:26px}
+    main{margin-top:32px}
+    .section{margin-bottom:56px}
+    .section-head{margin-bottom:16px}
+    .grid{grid-template-columns:1fr 1fr;gap:11px}
+    .card{padding:13px;gap:10px;border-radius:17px}
+    .icon{width:38px;height:38px;border-radius:11px;font-size:15px}
+    .meta strong{font-size:13.5px}
+    .meta small{display:none}
+    .kbd{display:none}
+    footer{padding-bottom:56px}
+
+    /* 手机上表格改为「每条一行」的堆叠列表 */
+    .table-wrap{overflow:visible}
+    table{min-width:0;font-size:14px;display:block}
+    thead{display:none}
+    tbody{display:block}
+    tbody tr{display:block;padding:12px 0;border-bottom:1px solid var(--line-soft)}
+    tbody tr:last-child{border-bottom:0}
+    tbody td{display:block;border:0;padding:1px 18px}
+    td.name{font-size:14px;font-weight:560;line-height:1.4}
+    td.note{font-size:12.5px;padding-top:3px}
+    .url{font-size:13px}
+    #toast{font-size:12.5px;padding:11px 16px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;animation:none !important}
+    html{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#">资源导航台</a>
+    <nav id="nav"></nav>
+    <button id="theme" title="切换深色 / 浅色" aria-label="切换主题">
+      <svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="hero">
+    <h1 id="site-title">资源导航台</h1>
+    <p class="sub" id="site-sub">GNSS · InSAR · 数据下载 · 常用系统</p>
+
+    <div class="search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+      <input id="q" type="search" placeholder="搜索站点、机构或文件路径…" autocomplete="off" spellcheck="false" />
+      <span class="kbd">/</span>
+    </div>
+
+    <nav class="hero-nav" id="nav-mobile" aria-label="分区导航"></nav>
+  </section>
+
+  <main id="app"></main>
+
+  <div class="empty" id="empty">
+    <b>没有找到匹配的内容</b>
+    换个关键词，或按 Esc 清空搜索
+  </div>
+
+  <footer id="site-footer"></footer>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =========================================================
+   ① 页面文字：改这里
+   ========================================================= */
+const SITE = {
+  title: "资源导航台",
+  subtitle: "GNSS · InSAR · 数据下载 · 常用系统",
+  footer: '内容按 <code>links.md</code> 整理 · 增删条目改本文件里的 <code>SECTIONS</code> 即可 · 按 <code>/</code> 搜索 · 带 <code>FTP</code> 标记的地址点击会复制，用 FileZilla 等客户端打开'
+};
+
+/* =========================================================
+   ② 内容：改这里
+   type: "cards"  -> 卡片网格
+   type: "blocks" -> 混合块（表格 + 卡片）
+   表格列定义: cols:[{ k:"name"|"url"|"note", label:"列名", type:"url" }]
+   ========================================================= */
+const SECTIONS = [
+  {
+    id: "gnss",
+    title: "GNSS",
+    type: "cards",
+    items: [
+      { name: "武汉市北斗卫星导航定位综合管理平台", desc: "116.211.238.25:2100", url: "https://116.211.238.25:2100/" },
+      { name: "大屏展示",   desc: "bigscreen · 同平台",  url: "https://116.211.238.25:2100/bigscreen/index.html#/" },
+      { name: "形变监测系统", desc: "111.47.12.190:9086", url: "http://111.47.12.190:9086/" },
+      { name: "BKG GNSS Datacenter", desc: "igs.bkg.bund.de", url: "https://igs.bkg.bund.de/" },
+      { name: "澳大利亚数据流中心", desc: "gnss.ga.gov.au", url: "https://gnss.ga.gov.au/stream" }
+    ]
+  },
+  {
+    id: "insar",
+    title: "InSAR",
+    type: "cards",
+    items: [
+      { name: "万象监测平台", desc: "radar.navfirst.com", url: "https://radar.navfirst.com/" },
+      { name: "万象数据中台", desc: "data.navfirst.com",  url: "https://data.navfirst.com/" }
+    ]
+  },
+  {
+    id: "data",
+    title: "数据",
+    type: "blocks",
+    blocks: [
+      {
+        type: "table",
+        title: "GNSS 观测数据",
+        cols: [ { k:"name", label:"机构" }, { k:"url", label:"链接", type:"url" } ],
+        rows: [
+          { name: "IGS 观测文件",      url: "ftp://igs.ign.fr/pub/igs/data/campaign/mgex/daily/" },
+          { name: "WUM 观测文件",      url: "ftp://igs.gnsswhu.cn/pub/gps/data/daily/" },
+          { name: "garner 观测文件",   url: "ftp://garner.ucsd.edu/pub/rinex/" },
+          { name: "geodetic 香港观测文件", url: "ftp://ftp.geodetic.gov.hk/rinex3/" },
+          { name: "EPN 欧洲观测文件",  url: "ftp://ftp.epncb.oma.be/pub/obs/" },
+          { name: "NASA 的 EARTHDATA 观测文件", note: "需要注册账号", url: "https://cddis.nasa.gov/archive/gnss/data/daily/" },
+          { name: "武汉大学 IGS 数据中心", url: "http://www.igs.gnsswhu.cn/index.php/home/data_product/igs.html" },
+          { name: "澳大利亚观测文件",  url: "https://gnss.bev.gv.at/at.gv.bev.dc/data/obs_v3/" },
+          { name: "德国观测文件",      url: "https://igs.bkg.bund.de/root_ftp/EUREF/obs_v3/" },
+          { name: "意大利观测文件",    url: "http://geodaf.mt.asi.it/GEOD/GPSD/RINEX_V3/" },
+          { name: "新西兰观测文件",    url: "http://gnss1.tudelft.nl/dpga/rinex/" },
+          { name: "法国观测文件",      url: "ftp://rgpdata.ign.fr/pub/data_v3/" }
+        ]
+      },
+      {
+        type: "table",
+        title: "精密星历",
+        cols: [ { k:"name", label:"机构" }, { k:"url", label:"链接", type:"url" } ],
+        rows: [
+          { name: "IGS 精密星历文件", url: "ftp://igs.ign.fr/pub/igs/products/mgex/" },
+          { name: "GFZ 精密星历文件", url: "ftp://ftp.gfz-potsdam.de/GNSS/products/mgnss/" },
+          { name: "WUM 精密星历文件", url: "ftp://igs.gnsswhu.cn/pub/gps/products/mgex/" },
+          { name: "NASA",             url: "https://cddis.nasa.gov/archive/gnss/products/mgex/" }
+        ]
+      },
+      {
+        type: "table",
+        title: "钟差、偏差、DCB",
+        cols: [ { k:"url", label:"链接", type:"url" }, { k:"note", label:"备注" } ],
+        rows: [
+          { url: "ftp://ftp.aiub.unibe.ch/CODE_MGEX/CODE/" },
+          { url: "http://ftp.aiub.unibe.ch/CODE/" },
+          { url: "ftp://igs.ign.fr/pub/igs/products/" },
+          { url: "ftp://ftp.gipp.org.cn/product/dcb/mgex/" },
+          { url: "ftp://ftp.gfz-potsdam.de/GNSS/products/mgex/" },
+          { url: "ftp://igs.gnsswhu.cn/pub/gnss/products/mgex/", note: "推荐" },
+          { url: "https://cddis.nasa.gov/archive/gnss/products/mgex/", note: "需代理" }
+        ]
+      },
+      {
+        type: "table",
+        title: "天线产品",
+        cols: [ { k:"url", label:"链接", type:"url" } ],
+        rows: [
+          { url: "https://files.igs.org/pub/station/general/pcv_archive/" },
+          { url: "http://www.epncb.oma.be/ftp/station/general/antex14.txt" },
+          { url: "https://gssc.esa.int/navipedia/index.php/Antenna_Phase_Centre" },
+          { url: "https://lists.igs.org/pipermail/igsmail/2022/008155.html" },
+          { url: "ftp://igs-rf.ign.fr/pub/IGS14/" }
+        ]
+      },
+      {
+        type: "cards",
+        items: [
+          { name: "国家青藏高原科学数据中心", desc: "data.tpdc.ac.cn", url: "https://data.tpdc.ac.cn/home" }
+        ]
+      }
+    ]
+  },
+  {
+    id: "systems",
+    title: "常用系统",
+    type: "cards",
+    items: [
+      { name: "协同平台",           desc: "cop.whkc.com",                url: "http://cop.whkc.com/seeyon/" },
+      { name: "城市智眼",           desc: "111.47.12.191:8005",          url: "http://111.47.12.191:8005/Smart_City_Eye/#/" },
+      { name: "武汉数智人社公共服务一体化平台", desc: "szrs.rsj.wuhan.gov.cn", url: "https://szrs.rsj.wuhan.gov.cn/#/modules/personMatter" },
+      { name: "注册测绘师继续教育", desc: "spatial.mnr.gov.cn",          url: "https://spatial.mnr.gov.cn/" },
+      { name: "不动产代理考试",     desc: "c.exam-sp.com",               url: "https://c.exam-sp.com/creva-agents" },
+      { name: "全国专技人员考试资格报名平台", desc: "zg.cpta.com.cn",     url: "https://zg.cpta.com.cn/examfront/login/initLogin.htm" }
+    ]
+  },
+  {
+    id: "fun",
+    title: "有趣的东西",
+    type: "cards",
+    items: [
+      { name: "RainViewer",     desc: "实时雷达降水图",      url: "https://www.rainviewer.com/weather-radar-map-live.html" },
+      { name: "CalculatorLib",  desc: "在线计算器",          url: "https://calculatorlib.com/zh" },
+      { name: "全球实时气象地图", desc: "earth.nullschool.net", url: "https://earth.nullschool.net/#current/" },
+      { name: "寰宇世界地图",   desc: "huawei.com.tw/earth", url: "https://huawei.com.tw/earth/" }
+    ]
+  }
+];
+
+/* 分区显示的先后：表格类（数据）放最后 */
+const ORDER = ["gnss", "insar", "systems", "fun", "data"];
+SECTIONS.sort((a, b) => ORDER.indexOf(a.id) - ORDER.indexOf(b.id));
+
+/* =========================================================
+   以下为渲染逻辑，一般不用改
+   ========================================================= */
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const isFtp = (u) => /^ftp:\/\//i.test(u);
+
+function hueOf(str){
+  let h = 0;
+  for (const ch of String(str)) h = (h * 31 + ch.codePointAt(0)) % 360;
+  return h;
+}
+function faviconOf(url){ try { return new URL("/favicon.ico", url).href; } catch { return ""; } }
+function hostOf(url){ try { return new URL(url).host; } catch { return url; } }
+function partsOf(url){
+  try {
+    const u = new URL(url);
+    return { proto: u.protocol.replace(":", "").toUpperCase(), host: u.host, path: u.pathname + u.search + u.hash };
+  } catch (e) {
+    return { proto: "", host: url, path: "" };
+  }
+}
+function match(text, kw){ return !kw || String(text).toLowerCase().includes(kw); }
+
+/* ---- 提示条 ---- */
+let toastTimer = null;
+function toast(msg){
+  const el = $("#toast");
+  el.textContent = msg;
+  el.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("on"), 2400);
+}
+
+/* ---- 复制（file:// 下 navigator.clipboard 可能不可用，故做降级） ---- */
+async function copyText(text){
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (e) { /* 继续降级 */ }
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;top:-1000px;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    ta.remove();
+    return ok;
+  } catch (e) { return false; }
+}
+async function copyFtp(url){
+  const ok = await copyText(url);
+  toast(ok ? "已复制 FTP 地址，用 FileZilla 等客户端打开" : "请手动复制：" + url);
+}
+
+/* ---- 单个链接的展示（卡片与表格共用） ---- */
+function bindOpen(el, url){
+  if (isFtp(url)) {
+    el.addEventListener("click", (e) => { e.preventDefault(); copyFtp(url); });
+    el.title = "FTP 地址 · 点击复制：" + url;
+  }
+}
+
+/* ---- 卡片 ---- */
+function cardNode(it){
+  const a = document.createElement("a");
+  a.className = "card";
+  a.href = it.url;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  a.title = it.name + " — " + it.url;
+  const h = hueOf(it.name);
+  a.innerHTML =
+    '<span class="icon" style="--h:' + h + '"><b>' + esc(it.name.slice(0, 1)) + '</b>' +
+      '<img alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()" src="' + esc(faviconOf(it.url)) + '" />' +
+    '</span>' +
+    '<span class="meta"><strong>' + esc(it.name) + '</strong><small>' + esc(it.desc || hostOf(it.url)) + '</small></span>' +
+    '<span class="arrow">↗</span>';
+  bindOpen(a, it.url);
+  return a;
+}
+
+/* ---- 表格单元格 ---- */
+function urlNode(url){
+  const p = partsOf(url);
+  const a = document.createElement("a");
+  a.className = "url";
+  a.href = url;
+  a.rel = "noopener noreferrer";
+  a.innerHTML =
+    '<span class="proto' + (isFtp(url) ? " ftp" : "") + '">' + esc(p.proto || "LINK") + '</span>' +
+    '<span class="host">' + esc(p.host) + '</span>' +
+    '<span class="path">' + esc(p.path) + '</span>';
+  a.target = isFtp(url) ? "" : "_blank";
+  bindOpen(a, url);  return a;
+}
+
+/* ---- 表格 ---- */
+function tableNode(block, kw, forced){
+  const rows = block.rows.filter((r) => {
+    if (forced) return true;
+    return match((r.name || "") + " " + r.url + " " + (r.note || ""), kw);
+  });
+  if (!rows.length) return null;
+
+  const box = document.createElement("div");
+  const sub = document.createElement("div");
+  sub.className = "sub-head";
+  sub.innerHTML = '<h3>' + esc(block.title) + '</h3><em>' + rows.length + ' 条</em>';
+  box.appendChild(sub);
+
+  const wrap = document.createElement("div");
+  wrap.className = "table-wrap";
+  const table = document.createElement("table");
+
+  const thead = document.createElement("thead");
+  thead.innerHTML = "<tr>" + block.cols.map((c) => "<th>" + esc(c.label) + "</th>").join("") + "</tr>";
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  rows.forEach((r) => {
+    const tr = document.createElement("tr");
+    block.cols.forEach((c) => {
+      const td = document.createElement("td");
+      if (c.type === "url") {
+        td.appendChild(urlNode(r.url));
+      } else {
+        td.className = c.k;
+        td.textContent = r[c.k] || "";
+        // 表格没有单独的「备注」列时，把备注跟在名称后面
+        if (c.k === "name" && r.note && !block.cols.some((x) => x.k === "note")) {
+          const em = document.createElement("em");
+          em.className = "cell-note";
+          em.textContent = " · " + r.note;
+          td.appendChild(em);
+        }
+      }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  box.appendChild(wrap);
+
+  return { el: box, n: rows.length };
+}
+
+/* ---- 卡片组 ---- */
+function gridNode(items, kw, forced){
+  const list = items.filter((it) => forced || match(it.name + " " + (it.desc || "") + " " + it.url, kw));
+  if (!list.length) return null;
+  const grid = document.createElement("div");
+  grid.className = "grid";
+  list.forEach((it) => grid.appendChild(cardNode(it)));
+  return { el: grid, n: list.length };
+}
+
+/* ---- 渲染 ---- */
+function render(keyword = ""){
+  const kw = keyword.trim().toLowerCase();
+  const app = $("#app");
+  app.innerHTML = "";
+  let shown = 0;
+
+  SECTIONS.forEach((sec) => {
+    const secForced = match(sec.title, kw);
+    const body = document.createElement("div");
+    let count = 0;
+
+    if (sec.type === "cards") {
+      const r = gridNode(sec.items, kw, secForced);
+      if (r) { body.appendChild(r.el); count += r.n; }
+    } else {
+      (sec.blocks || []).forEach((b) => {
+        const forced = secForced || (b.title ? match(b.title, kw) : false);
+        let r = null;
+        if (b.type === "table") r = tableNode(b, kw, forced);
+        else if (b.type === "cards") r = gridNode(b.items, kw, forced);
+        if (r) {
+          const block = document.createElement("div");
+          block.className = "block";
+          block.appendChild(r.el);
+          body.appendChild(block);
+          count += r.n;
+        }
+      });
+    }
+
+    if (!count) return;
+    shown += count;
+
+    const section = document.createElement("section");
+    section.className = "section";
+    section.id = sec.id;
+    section.innerHTML =
+      '<div class="section-head"><h2>' + esc(sec.title) + '</h2>' +
+      '<span class="num">' + count + '</span><span class="line"></span></div>';
+    section.appendChild(body);
+    app.appendChild(section);
+  });
+
+  $("#empty").classList.toggle("on", shown === 0 && !!kw);
+  // 搜索时隐藏分区导航，避免跳到已被过滤掉的区块
+  $("#nav").style.display = kw ? "none" : "";
+  const navM = document.querySelector("#nav-mobile");
+  if (navM) navM.style.display = kw ? "none" : "";
+}
+
+/* ---- 分区导航（桌面顶栏 + 手机首屏各一份） ---- */
+(function buildNav(){
+  ["#nav", "#nav-mobile"].forEach((sel) => {
+    const box = document.querySelector(sel);
+    if (!box) return;
+    SECTIONS.forEach((s) => {
+      const a = document.createElement("a");
+      a.href = "#" + s.id;
+      a.textContent = s.title;
+      box.appendChild(a);
+    });
+  });
+})();
+
+/* ---- 搜索 ---- */
+const q = $("#q");
+let timer = null;
+q.addEventListener("input", (e) => {
+  clearTimeout(timer);
+  const v = e.target.value;
+  timer = setTimeout(() => render(v), 60);
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== q) {
+    e.preventDefault();
+    q.focus();
+    q.select();
+  }
+  if (e.key === "Escape") {
+    q.value = "";
+    render("");
+    q.blur();
+  }
+});
+
+/* ---- 主题 ---- */
+const themeBtn = $("#theme");
+function applyTheme(t){
+  document.documentElement.dataset.theme = t;
+  themeBtn.title = t === "dark" ? "切换到浅色" : "切换到深色";
+}
+(function initTheme(){
+  const saved = localStorage.getItem("hub-theme");
+  const sysDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  applyTheme(saved || (sysDark ? "dark" : "light"));
+})();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  applyTheme(next);
+  localStorage.setItem("hub-theme", next);
+});
+
+/* ---- 文字 ---- */
+$("#site-title").textContent = SITE.title;
+document.querySelector(".brand").textContent = SITE.title;
+$("#site-sub").textContent = SITE.subtitle;
+$("#site-footer").innerHTML = SITE.footer;
+document.title = SITE.title;
+
+render();
+</script>
+</body>
+</html>
